@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Personal Video Streamer</title>
+  <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <div id="player-container">
+    <video id="video-player" class="video-js vjs-default-skin" controls preload="auto">
+      <source src="" type="video/mp4">
+    </video>
+  </div>
+  <div id="video-list"></div>
+
+  <script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
+  <script>
+    const player = videojs('video-player');
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = ('0' + Math.floor(sec % 60)).slice(-2);
+      return m + ':' + s;
+    }
+
+    function loadVideos() {
+      fetch('/videos')
+        .then(res => res.json())
+        .then(videos => {
+          const list = document.getElementById('video-list');
+          list.innerHTML = '';
+          videos.forEach(v => {
+            const item = document.createElement('div');
+            item.className = 'video-item';
+            item.innerHTML = `
+              <img class="thumb" src="/thumb/${v.thumb}">
+              <div class="title">${v.name}</div>
+              <div class="duration">${formatTime(v.duration)}</div>
+            `;
+            item.onclick = () => {
+              player.src({ type: 'video/mp4', src: '/video/' + v.path });
+              player.poster('/thumb/' + v.thumb);
+              player.play();
+            };
+            list.appendChild(item);
+          });
+          if (videos[0]) {
+            player.src({ type: 'video/mp4', src: '/video/' + videos[0].path });
+            player.poster('/thumb/' + videos[0].thumb);
+          }
+        });
+    }
+
+    player.ready(function () {
+      loadVideos();
+      player.controlBar.fullscreenToggle.on('click', function () {
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {});
+        }
+      });
+    });
+  </script>
+</body>
+</html>
