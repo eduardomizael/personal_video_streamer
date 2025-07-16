@@ -34,20 +34,20 @@
             const item = document.createElement('div');
             item.className = 'video-item';
             item.innerHTML = `
-              <img class="thumb" src="/thumb/${v.thumb}">
+              <img class="thumb" src="/thumb/${v.hash}">
               <div class="title">${v.name}</div>
               <div class="duration">${formatTime(v.duration)}</div>
             `;
             item.onclick = () => {
-              player.src({ type: 'video/mp4', src: '/video/' + v.path });
-              player.poster('/thumb/' + v.thumb);
+              player.src({ type: 'video/mp4', src: '/video/' + v.id });
+              player.poster('/thumb/' + v.hash);
               player.play();
             };
             list.appendChild(item);
           });
           if (videos[0]) {
-            player.src({ type: 'video/mp4', src: '/video/' + videos[0].path });
-            player.poster('/thumb/' + videos[0].thumb);
+            player.src({ type: 'video/mp4', src: '/video/' + videos[0].id });
+            player.poster('/thumb/' + videos[0].hash);
           }
         });
     }

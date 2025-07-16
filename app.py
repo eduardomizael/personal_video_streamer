@@ -1,8 +1,9 @@
 import subprocess
+import hashlib
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template, send_from_directory
-from tinydb import TinyDB
+from flask import Flask, abort, jsonify, render_template, send_file, abort, send_from_directory
+from tinydb import TinyDB, Query
 
 VIDEO_DIR = Path("videos")
 THUMB_DIR = Path("thumbs")
@@ -67,24 +68,61 @@ def generate_thumbnail(path: Path) -> Path:
     return thumb
 
 
-def load_videos() -> None:
-    """Scan VIDEO_DIR and populate the database."""
-    db.truncate()
-    if not VIDEO_DIR.exists():
-        return
+def hash_file(path: Path) -> str:
+    """Return SHA256 hash of a file."""
+    h = hashlib.sha256()
+    try:
+        with path.open("rb") as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                h.update(chunk)
+    except FileNotFoundError:
+        return ""
+    return h.hexdigest()
+
+
+def sync_videos() -> None:
+    """Synchronize database with files on disk using hashes."""
+    VIDEO_DIR.mkdir(exist_ok=True)
+    THUMB_DIR.mkdir(exist_ok=True)
+
+    existing_hashes: set[str] = set()
+    allowed_ext = {".mp4", ".mkv", ".webm", ".avi"}
+
     for file in sorted(VIDEO_DIR.iterdir()):
-        if file.suffix.lower() not in {".mp4", ".mkv", ".webm", ".avi"}:
+        if file.suffix.lower() not in allowed_ext:
             continue
-        duration = get_video_duration(file.absolute())
-        thumb = generate_thumbnail(file.absolute())
-        db.insert(
-            {
-                "name": file.stem,
-                "path": str(file.absolute()),
-                "duration": duration,
-                "thumb": thumb.name,
-            }
-        )
+        file = file.resolve()
+        file_hash = hash_file(file)
+        if not file_hash:
+            continue
+        existing_hashes.add(file_hash)
+
+        duration = get_video_duration(file)
+        thumb = generate_thumbnail(file)
+        entry = db.get(Query().hash == file_hash)
+
+        data = {
+            "hash": file_hash,
+            "name": file.stem,
+            "path": str(file.resolve()),
+            "duration": duration,
+            "thumb": thumb.name,
+        }
+
+        if entry:
+            db.update(data, Query().hash == file_hash)
+        else:
+            db.insert(data)
+
+    # Remove entries whose files no longer exist
+    for entry in db.all():
+        if entry.get("hash") not in existing_hashes or not Path(entry.get("path", "")).exists():
+            db.remove(Query().hash == entry.get("hash"))
+
+
+def load_videos() -> None:
+    """Deprecated. Use sync_videos instead."""
+    sync_videos()
 
 
 @app.route("/")
@@ -94,19 +132,29 @@ def index():
 
 @app.route("/videos")
 def videos():
-    return jsonify(db.all())
+    """Return list of videos with their database ids."""
+    return jsonify([{**doc, "id": doc.doc_id} for doc in db])
 
 
-@app.route("/video/<path:filename>")
-def video(filename):
-    return send_from_directory(VIDEO_DIR, filename)
+@app.route("/video/<int:video_id>")
+def video(video_id: int):
+    """Stream the video associated with the given id."""
+    entry = db.get(doc_id=video_id)
+    if not entry:
+        abort(404)
+    return send_from_directory(entry["path"])
 
-
-@app.route("/thumb/<path:filename>")
-def thumb(filename):
-    return send_from_directory(THUMB_DIR, filename)
+@app.route("/thumb/<file_hash>")
+def thumb(file_hash: str):
+    entry = db.get(Query().hash == file_hash)
+    if not entry:
+        abort(404)
+    thumb_path = THUMB_DIR / entry.get("thumb", "")
+    if not thumb_path.exists():
+        abort(404)
+    return send_file(thumb_path)
 
 
 if __name__ == "__main__":
-    load_videos()
+    sync_videos()
     app.run(debug=True, host="0.0.0.0", port=5000)
