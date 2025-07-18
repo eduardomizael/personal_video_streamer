@@ -1,0 +1,16 @@
+{% extends 'base/body2.html' %}
+
+{% block content %}
+
+    <div class="container">
+        {% for obj in object_list %}
+            <div class="row">
+                <div class="col-md-12">
+                    <h1>{{ obj.first_name }} {{ obj.last_name }}</h1>
+                    <p>{{ obj.username }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block css %}
+    <style>
+        /* Container responsivo */
+        #player-container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* Aspect ratio 16:9 responsivo */
+        .video-js {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
+        }
+
+        /* Melhorias para touch em dispositivos móveis */
+        .vjs-has-started .vjs-control-bar {
+            height: 4em;
+        }
+
+        .video-js .vjs-control {
+            width: 4em;
+        }
+    </style>
+{% endblock %}
+
+{% block js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var player = videojs('my-video', {
+                // Melhora a experiência em dispositivos móveis
+                userActions: {
+                    doubleClick: true,
+                    hotkeys: true
+                },
+                // Habilita gestos de pinça para zoom em dispositivos móveis
+                touchControls: true
+            });
+
+            // Trava orientação em paisagem ao entrar em tela cheia
+            player.on('fullscreenchange', function() {
+                if (player.isFullscreen() && screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(function() {});
+                }
+            });
+
+            {#// Retoma a reprodução após perda de foco (útil em mobile)#}
+            {#player.on('pause', function() {#}
+            {#    if (document.visibilityState === 'visible') {#}
+            {#        player.play();#}
+            {#    }#}
+            {#});#}
+        });
+    </script>
+
+{% endblock %}
+
+{% block content %}
+    <div id="player-container">
+        <video
+                id="my-video"
+                class="video-js vjs-fluid vjs-big-play-centered"
+                controls
+                preload="auto"
+                playsinline
+                autoplay
+                poster="{{ video.thumbnail.url }}"
+                data-setup='{
+                    "fluid": true,
+                    "responsive": true,
+                    "playbackRates": [0.5, 1, 1.5, 2],
+                    "controlBar": {
+                        "volumePanel": {"inline": false},
+                        "children": [
+                            "playToggle",
+                            "progressControl",
+                            "currentTimeDisplay",
+                            "timeDivider",
+                            "durationDisplay",
+                            "volumePanel",
+                            "playbackRateMenuButton",
+                            "fullscreenToggle"
+                        ]
+                    }
+                }'
+        >
+
+            <source src="{% url 'data:video:stream' video.pk %}" type="video/mp4" />
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a
+                web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank"
+                >supports HTML5 video</a
+                >
+            </p>
+        </video>
+    </div>
+{% endblock %}

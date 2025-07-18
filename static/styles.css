@@ -41,3 +41,55 @@ body {
   font-size: 12px;
   color: #666;
 }
+
+.video-card {
+  width: 360px;
+  background-color: #111;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.thumbnail-container {
+  position: relative;
+}
+
+.thumbnail {
+  width: 100%;
+  display: block;
+}
+
+.duration {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 3px;
+}
+
+.video-info {
+  padding: 10px;
+}
+
+.channel-name {
+  font-size: 13px;
+  color: #ccc;
+  margin-bottom: 4px;
+}
+
+.video-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.video-meta {
+  font-size: 12px;
+  color: #aaa;
+}

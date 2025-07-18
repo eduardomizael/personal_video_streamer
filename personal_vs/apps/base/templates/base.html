@@ -1,0 +1,22 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>{% block title %}{% endblock title %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <link href="https://vjs.zencdn.net/8.23.3/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/8.23.3/video.min.js" defer></script>
+
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    {% block css %}{% endblock css %}
+    {% block js %}{% endblock js %}
+</head>
+<body>
+{% block content %}{% endblock content %}
+</body>
+</html>

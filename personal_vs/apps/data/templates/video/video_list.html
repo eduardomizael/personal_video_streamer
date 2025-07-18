@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load video_filters %}
+
+{% block css %}
+    <style>
+        /* posiciona a duração sobre a thumbnail */
+        .card-image figure { position: relative; }
+        .video-duration {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            padding: 2px 6px;
+            font-size: 0.75rem;
+            border-radius: 3px;
+        }
+    </style>
+{% endblock css %}
+{% block content %}
+
+    <section class="section">
+        <div class="container">
+            <!-- Lista semântica de vídeos -->
+            <ul id="video-list" class="columns is-multiline">
+                {% for video in videos %}
+                    <li class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <a href="{% url 'data:video:player' video.pk %}">
+                            <div class="card">
+                                <div class="card-image">
+                                    <figure class="image is-16by9">
+                                        <img src="{{ video.thumbnail.url }}" alt="Thumbnail: {{ video.title }}">
+                                        <span class="video-duration">{{ video.duration|format_duration }}</span>
+                                    </figure>
+                                </div>
+                                <div class="card-content">
+                                    <div class="media">
+                                        <div class="media-content">
+                                            <p class="title is-6 mb-1">{% firstof video.title video.file_name %}</p>
+                                            <p class="subtitle is-7 has-text-grey">{{ video.channel_name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="content is-size-7 has-text-grey">
+                                        {{ video.views }} visualizações
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+
+{% endblock %}
